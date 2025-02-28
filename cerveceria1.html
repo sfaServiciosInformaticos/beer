@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beer Montecarlo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            position: relative;
+        }
+        .productos-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 20px;
+            max-width: 1000px;
+        }
+        .producto {
+            border: 2px solid gold;
+            padding: 15px;
+            background-color: #222;
+            border-radius: 10px;
+            width: 250px;
+            text-align: center;
+        }
+        .producto img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        button {
+            background-color: gold;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: darkgoldenrod;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            text-align: center;
+            z-index: 1000;
+            cursor: move; /* Cambia el cursor para indicar que es arrastrable */
+        }
+        .modal button {
+            margin-top: 10px;
+        }
+        #total {
+            font-size: 18px;
+            font-weight: bold;
+            color: green;
+            margin-top: 10px;
+        }
+
+        .menu {
+            position: fixed;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            background-color: #333;
+            padding: 10px;
+            border-radius: 10px 0 0 10px;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .menu button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            background-color: gold;
+            color: black;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 5px;
+        }
+        .menu button:hover {
+            background-color: darkgoldenrod;
+        }
+        .contenido-pestaña {
+            display: none;
+            position: fixed;
+            top: 50%;
+            right: 100px;
+            transform: translateY(-50%);
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+            color: white;
+            width: 200px;
+            z-index: 999;
+            cursor: move; /* Cambia el cursor para indicar que es arrastrable */
+        }
+        .contenido-pestaña.activo {
+            display: block;
+        }
+        .cerrar-pestana {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            color: white;
+            background-color: red;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            line-height: 25px;
+        }
+        .cerrar-pestana:hover {
+            background-color: darkred;
+        }
+        .ocultar {
+            display: none;
+        }
+        .opciones-carrito {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+        }
+        #cantidadLitros {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <img src="logoBeer.jpg" width="180px" height="180px">
+    <h1>Bienvenido a BEER MONTECARLO</h1>
+    <div class="productos-container">
+        <div class="producto">
+            <img src="cervesa1.jpg" alt="Cerveza Rubia">
+            <h2>Cerveza Rubia el litro</h2>
+            <p>Precio: $4500.00</p>
+            <p>Superando el litro el precio: $4000.00</p>
+            <button onclick="agregarAlCarrito('Cerveza Rubia', 4500, 4000)">Agregar al Carrito</button>
+        </div>
+        <div class="producto">
+            <img src="cervesa2.jpg" alt="Cerveza Negra">
+            <h2>Cerveza Negra el litro</h2>
+            <p>Precio: $4500.00</p>
+            <p>Superando el litro el precio: $4000.00</p>
+            <button onclick="agregarAlCarrito('Cerveza Negra', 4500, 4000)">Agregar al Carrito</button>
+        </div>
+        <div class="producto">
+            <img src="cervesa3.jpg" alt="Cerveza Roja">
+            <h2>Cerveza Roja el litro</h2>
+            <p>Precio: $4500.00</p>
+            <p>Superando el litro el precio: $4000.00</p>
+            <button onclick="agregarAlCarrito('Cerveza Roja', 4500, 4000)">Agregar al Carrito</button>
+        </div>
+    </div>
+
+    <!-- Menú lateral -->
+    <div class="menu">
+        <button onclick="mostrarPestana('contacto')">Contacto</button>
+        <button onclick="mostrarPestana('quien-soy')">Quién soy</button>
+        <button onclick="mostrarPestana('ventas')">Ventas</button>
+    </div>
+
+    <!-- Contenido de las pestañas -->
+    <div id="contacto" class="contenido-pestaña">
+        <span class="cerrar-pestana" onclick="cerrarPestana('contacto')">×</span>
+        <h3>Contacto</h3>
+        <p>Celular: 3751-504481</p>
+    </div>
+    <div id="quien-soy" class="contenido-pestaña">
+        <span class="cerrar-pestana" onclick="cerrarPestana('quien-soy')">×</span>
+        <h3>Quién soy</h3>
+        <p>Beer Montecarlo. Empresa dedicada a la elaboración y venta de cervezas artesanales de alta calidad.</p>
+    </div>
+    <div id="ventas" class="contenido-pestaña">
+        <span class="cerrar-pestana" onclick="cerrarPestana('ventas')">×</span>
+        <h3>Ventas</h3>
+        <p>Realiza tus pedidos y te los llevamos a domicilio.</p>
+    </div>
+
+    <div id="opcionesCarrito" class="ocultar opciones-carrito">
+        <label for="tipoIngreso">¿Cómo deseas agregar al carrito?</label><br>
+        <select id="tipoIngreso" onchange="mostrarOpciones()">
+            <option value="unidad">Por unidad de litro</option>
+            <option value="litrosSuperiores">Superando los 5 litros</option>
+        </select><br><br>
+
+        <div id="cantidadLitros">
+            <label for="litros">Ingresa los litros deseados (mayor a 5 lts):</label><br>
+            <input type="number" id="litros" min="1" step="1" placeholder="Tiene que ser Mayor a 5 litros" /><br><br>
+            <span id="precioPorLitro"></span><br><br>
+        </div>
+
+        <button onclick="confirmarCarrito()">Confirmar</button>
+    </div>
+
+    <div id="modal" class="modal">
+        <h2>Carrito de Compras</h2>
+        <ul id="lista-carrito"></ul>
+        <p id="total">Total: $0.00</p>
+        <button onclick="generarPDF()">Generar PDF</button>
+        <button onclick="cerrarModal()">Cerrar</button>
+    </div>
+
+    <script>
+        let carrito = [];
+
+        // Función para hacer arrastrable un elemento
+        function hacerArrastrable(elemento) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            elemento.onmousedown = arrastrarMouseDown;
+
+            function arrastrarMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = detenerArrastre;
+                document.onmousemove = arrastrarElemento;
+            }
+
+            function arrastrarElemento(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                elemento.style.top = (elemento.offsetTop - pos2) + "px";
+                elemento.style.left = (elemento.offsetLeft - pos1) + "px";
+            }
+
+            function detenerArrastre() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        // Hacer arrastrables los modales
+        document.querySelectorAll(".modal, .contenido-pestaña").forEach(hacerArrastrable);
+
+        function agregarAlCarrito(nombre, precio, precioSuperado) {
+            const nuevoProducto = {
+                nombre: nombre,
+                precio: precio,
+                precioSuperado: precioSuperado,
+                precioFinal: precio
+            };
+
+            carrito.push(nuevoProducto);
+            mostrarOpciones();
+            document.getElementById("opcionesCarrito").classList.remove("ocultar");
+        }
+
+        function mostrarOpciones() {
+            const tipoIngreso = document.getElementById("tipoIngreso").value;
+            const cantidadLitros = document.getElementById("cantidadLitros");
+            const litrosInput = document.getElementById("litros");
+            const precioPorLitro = document.getElementById("precioPorLitro");
+            
+            if (tipoIngreso === "litrosSuperiores") {
+                cantidadLitros.style.display = "block";
+                litrosInput.addEventListener('input', function() {
+                    const litros = parseFloat(litrosInput.value);
+                    if (litros >= 5) {
+                        const precioTotal = carrito[carrito.length - 1].precioSuperado * litros;
+                        precioPorLitro.textContent = `Precio Total: $${precioTotal.toFixed(2)}`;
+                    }
+                });
+            } else {
+                cantidadLitros.style.display = "none";
+            }
+        }
+
+        function confirmarCarrito() {
+            const litros = parseFloat(document.getElementById("litros").value);
+            if (!isNaN(litros) && litros > 0) {
+                carrito[carrito.length - 1].precioFinal = carrito[carrito.length - 1].precioSuperado * litros;
+            }
+            actualizarCarrito();
+            document.getElementById("opcionesCarrito").classList.add("ocultar");
+            document.getElementById("modal").style.display = "block";
+        }
+
+        function actualizarCarrito() {
+            const listaCarrito = document.getElementById("lista-carrito");
+            listaCarrito.innerHTML = '';
+            let total = 0;
+            carrito.forEach(item => {
+                const li = document.createElement("li");
+                li.textContent = `${item.nombre} - $${item.precioFinal.toFixed(2)}`;
+                listaCarrito.appendChild(li);
+                total += item.precioFinal;
+            });
+            document.getElementById("total").textContent = `Total: $${total.toFixed(2)}`;
+        }
+
+        function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Logo de la tienda
+            const img = new Image();
+            img.src = "logoBeer.jpg";
+            doc.addImage(img, 'JPEG', 80, 10, 50, 50);
+
+            // Título
+            doc.setTextColor(255, 165, 0);
+            doc.setFontSize(20);
+            doc.text("Comprobante de Compra", 60, 70);
+
+            // Dibujar tarjeta
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(10, 80, 190, 100, 5, 5, 'F');
+
+            // Tabla de productos
+            let y = 90;
+            doc.setFontSize(12);
+            doc.setTextColor(0);
+            doc.text("N°", 15, y);
+            doc.text("Producto", 30, y);
+            doc.text("Precio", 150, y);
+
+            doc.setDrawColor(255, 165, 0);
+            doc.line(10, y + 2, 200, y + 2);
+
+            y += 10;
+            let sumaTotal = 0;
+            carrito.forEach((item, index) => {
+                doc.text(`${index + 1}`, 15, y);
+                doc.text(item.nombre, 30, y);
+                doc.text(`$${item.precio.toFixed(2)}`, 150, y);
+                sumaTotal += item.precio;
+                y += 10;
+            });
+
+            doc.setDrawColor(255, 165, 0);
+            doc.line(10, y, 200, y);
+
+            doc.setFontSize(14);
+            doc.setTextColor(255, 0, 0);
+            doc.text(`Total a pagar: $${sumaTotal.toFixed(2)}`, 30, y + 10);
+
+            // Agregar contacto con logo de WhatsApp
+            const whatsappLogo = new Image();
+            const mailLogo = new Image();
+            const beerLogo = new Image();
+            
+            whatsappLogo.src = "whatsapp.png"; // Ruta de la imagen del logo de WhatsApp
+            doc.addImage(whatsappLogo, 'PNG', 30, y + 20, 10, 10); // Ajusta la posición y tamaño del logo
+            doc.setFontSize(12);
+            doc.setTextColor(0);
+            doc.text("Contacto: 3751-504481", 40, y + 27); // Ajusta la posición del texto
+            
+            mailLogo.src = "mail.png"; // Ruta de la imagen del logo de WhatsApp
+            doc.addImage(mailLogo, 'PNG', 32, y + 15, 6, 6); // Ajusta la posición y tamaño del logo
+            doc.text("E-mail: sebastianoscarrio_1986@hotmail.com", 40, y + 20); // Ajusta la posición del texto
+
+            beerLogo.src = "logoBeer.jpg"; // Ruta de la imagen del logo de WhatsApp
+            doc.addImage(beerLogo, 'jpg', 32, y + 30, 6, 6); // Ajusta la posición y tamaño del logo
+            doc.text("Visitanos en: https://github.com/BeerMontecarlo/beer/cerveceria1.html", 40, y + 35); // Ajusta la posición del texto
+
+            // Guardar PDF
+            doc.save("comprobante.pdf");
+        }
+
+
+
+        function cerrarModal() {
+            document.getElementById("modal").style.display = "none";
+            carrito = []; // Resetea el carrito
+            actualizarCarrito(); // Actualiza la lista del carrito (vacía)
+        }
+
+        function mostrarPestana(pestana) {
+            document.getElementById(pestana).classList.add("activo");
+        }
+
+        function cerrarPestana(pestana) {
+            document.getElementById(pestana).classList.remove("activo");
+        }
+    </script>
+</body>
+</html>
